@@ -1,0 +1,94 @@
+{
+  "clinic_details": {
+    "name": "HealthCare Plus Clinic",
+    "location": "123 Main St, Springfield, NY",
+    "parking": "Free parking available behind the building.",
+    "hours": {
+      "mon_fri": "9:00 AM - 5:00 PM",
+      "sat": "Closed",
+      "sun": "Closed"
+    }
+  },
+  "faqs": [
+    {
+      "category": "Clinic Details",
+      "question": "What is the location of the clinic and how can I get directions?",
+      "answer": "HealthCare Plus Clinic is located at 123 Health Ave, Suite 100, Anytown, State 12345. You can find detailed driving directions by searching 'HealthCare Plus Clinic' on Google Maps."
+    },
+    {
+      "category": "Clinic Details",
+      "question": "What are the clinic's hours of operation?",
+      "answer": "Our standard hours of operation are Monday to Friday, 8:00 AM to 5:00 PM. We are closed on weekends and major public holidays."
+    },
+    {
+      "category": "Clinic Details",
+      "question": "Is there parking available at the clinic?",
+      "answer": "Yes, we offer free patient parking in the lot directly in front of our building. Look for the spaces marked 'Patient Parking'."
+    },
+    {
+      "category": "Insurance & Billing",
+      "question": "What insurance providers does the clinic accept?",
+      "answer": "We accept most major insurance providers including Blue Cross Blue Shield, Aetna, Cigna, UnitedHealthcare, and Medicare. Please contact your insurance company directly to confirm your specific coverage details. We also accept self-pay patients."
+    },
+    {
+      "category": "Insurance & Billing",
+      "question": "What payment methods are accepted?",
+      "answer": "We accept cash, all major credit/debit cards (Visa, Mastercard, Amex), and electronic payments via secure patient portal."
+    },
+    {
+      "category": "Insurance & Billing",
+      "question": "Can you explain your billing policies?",
+      "answer": "Co-pays and outstanding balances are due at the time of service. We will submit claims to your insurance provider. You will be billed for any costs not covered by your insurance after processing."
+    },
+    {
+      "category": "Visit Preparation",
+      "question": "What required documents should I bring to my first visit?",
+      "answer": "For your first visit, please bring a valid photo ID, your current insurance card, a list of all current medications, and any recent test results or medical records you may have."
+    },
+    {
+      "category": "Visit Preparation",
+      "question": "What are the first visit procedures?",
+      "answer": "New patients should arrive 15 minutes early to complete initial paperwork. We will verify your insurance and ID, followed by a brief nurse consultation before seeing the doctor."
+    },
+    {
+      "category": "Policies",
+      "question": "What is the cancellation policy?",
+      "answer": "We require a minimum of **24 hours' notice** for appointment cancellations. Appointments cancelled with less than 24 hours' notice may be subject to a \\$50 cancellation fee."
+    },
+    {
+      "category": "Policies",
+      "question": "What is the late arrival policy?",
+      "answer": "If you arrive more than 15 minutes late for your appointment, we may need to reschedule you to avoid impacting other patients' wait times. Please call us if you anticipate being late."
+    },
+    {
+      "category": "Policies",
+      "question": "What are the current COVID-19 protocols?",
+      "answer": "We require all patients to wear a mask inside the clinic regardless of vaccination status. If you have symptoms, please call before your appointment."
+    },
+    {
+      "category": "Visit Preparation",
+      "question": "What is the difference between a General Consultation and a Physical Exam?",
+      "answer": "A **General Consultation** (30 minutes) is typically for discussing a specific ailment, managing chronic conditions, or addressing new symptoms like headaches. A **Physical Exam** (45 minutes) is a comprehensive annual checkup intended to assess your overall health, including preventative screenings and blood work orders. The physical exam is usually covered differently by insurance than a consultation."
+    },
+    {
+      "category": "Visit Preparation",
+      "question": "If I am scheduling a Follow-up appointment, what should I prepare?",
+      "answer": "Follow-up appointments (15 minutes) are brief visits to review recent lab results, discuss adjustments to medication, or check on the progress of a diagnosed condition. Please bring any new symptoms you've noticed, and ensure any lab work requested during your previous visit has been completed."
+    },
+    {
+      "category": "Policies",
+      "question": "Can I request a copy of my medical records?",
+      "answer": "Yes, you can request a copy of your medical records. Please fill out a Medical Release Form, available at the front desk or on our website. Standard processing time is 5-7 business days."
+    },
+    {
+      "category": "Insurance & Billing",
+      "question": "Do you offer self-pay rates for patients without insurance?",
+      "answer": "Yes, we offer competitive self-pay rates. The cost of a General Consultation for self-pay patients is \\$150. Payment is required at the time of service."
+    },
+    {
+      "category": "Policies",
+      "question": "How are rescheduling requests handled?",
+      "answer": "We handle rescheduling requests just like cancellations; we ask for **24 hours' notice** to reschedule without a fee. You can reschedule directly through the confirmation email link or by asking the scheduling agent for assistance."
+    }
+  ]
+}
