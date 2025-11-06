@@ -1,0 +1,27 @@
+{
+  "working_hours": {
+    "mon": {"start": "09:00", "end": "17:00"},
+    "tue": {"start": "09:00", "end": "17:00"},
+    "wed": {"start": "09:00", "end": "17:00"},
+    "thu": {"start": "09:00", "end": "17:00"},
+    "fri": {"start": "09:00", "end": "14:00"}
+  },
+  "existing_appointments": [
+    {
+      "date": "2024-11-04",
+      "start_time": "10:00",
+      "appointment_type": "General Consultation",
+      "duration": 30,
+      "patient": {"name": "Alice Smith", "email": "alice@example.com", "phone": "12345"},
+      "reason": "Fever"
+    },
+    {
+      "date": "2024-11-04",
+      "start_time": "13:15",
+      "appointment_type": "Physical Exam",
+      "duration": 45,
+      "patient": {"name": "Bob Jones", "email": "bob@example.com", "phone": "67890"},
+      "reason": "Routine"
+    }
+  ]
+}
