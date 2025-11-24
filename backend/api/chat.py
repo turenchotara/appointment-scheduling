@@ -12,9 +12,12 @@ async def read_root():
     return {"message": "Hello, FastAPI!"}
 
 
+# @app_router.post("/chat")
+# async def read_item(request_data: ChatRequest):
 @app_router.get("/chat")
-async def read_item(request_data: ChatRequest):
-    result = invoke_agent(request_data.user_query, request_data.session_id)
+async def read_item(user_query: str, session_id: str):
+    # result = invoke_agent(request_data.user_query, request_data.session_id)
+    result = invoke_agent(user_query, session_id)
     return {"result": result}
 
 
