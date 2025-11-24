@@ -1,49 +1,48 @@
-from langchain.chat_models import init_chat_model
-from langchain.messages import ToolMessage
-from langchain_core.messages import SystemMessage, HumanMessage
+from langchain_core.messages import SystemMessage, HumanMessage, AIMessage
 from langgraph.constants import START, END
 from langgraph.graph import StateGraph
 
-from backend.agent.state import MessagesState
-from backend.tools import book_appointment, check_availability
+from .prompt import AGENT_PROMPT
+from .state import MessagesState
+from .tool_node import tool_node
+from backend.tools import tools
 
-model = init_chat_model(
-    # "google_vertexai:gemini-2.5-flash",
-    "",
-    temperature=0.2
+from langchain_google_genai import ChatGoogleGenerativeAI
+
+llm = ChatGoogleGenerativeAI(
+    model="",
+    temperature=0,
+    max_retries=2,
+    google_api_key=""
 )
 
-tools = [book_appointment, check_availability]
-tools_by_name = {tool.name: tool for tool in tools}
-model_with_tools = model.bind_tools(tools)
+model_with_tools = llm.bind_tools(tools)
 
 
 def llm_call(state: dict):
     """LLM decides whether to call a tool or not"""
 
-    return {
-        "messages": [
-            model_with_tools.invoke(
-                [
-                    SystemMessage(
-                        content="You are a helpful assistant tasked with performing operation like book appointment or give FAQ answer based on user query."
-                    )
-                ]
-                + state["messages"]
+    llm_response = model_with_tools.invoke(
+        [
+            SystemMessage(
+                content=AGENT_PROMPT
             )
-        ],
+        ]
+        + state["messages"]
+    )
+
+    return {
+        "messages": [llm_response],
         "session_id": state["session_id"]
     }
 
-def tool_node(state: dict):
-    """Performs the tool call"""
 
-    result = []
-    for tool_call in state["messages"][-1].tool_calls:
-        tool = tools_by_name[tool_call["name"]]
-        observation = tool.invoke(tool_call["args"])
-        result.append(ToolMessage(content=observation, tool_call_id=tool_call["id"]))
-    return {"messages": result}
+def should_continue(state: dict) -> str:
+    """Decide whether we need to execute a tool call."""
+    last_message = state["messages"][-1]
+    if getattr(last_message, "tool_calls", None):
+        return "tool_node"
+    return "end"
 
 
 # Build workflow
@@ -51,10 +50,19 @@ agent_builder = StateGraph(MessagesState)
 
 # Add nodes
 agent_builder.add_node("llm_call", llm_call)
+agent_builder.add_node("tool_node", tool_node)
 
 # Add edges to connect nodes
 agent_builder.add_edge(START, "llm_call")
-agent_builder.add_edge("llm_call", END)
+agent_builder.add_conditional_edges(
+    "llm_call",
+    should_continue,
+    {
+        "tool_node": "tool_node",
+        "end": END
+    }
+)
+agent_builder.add_edge("tool_node", "llm_call")
 
 # Compile the agent
 agent = agent_builder.compile()
@@ -63,6 +71,13 @@ agent = agent_builder.compile()
 def invoke_agent(query, session_id):
     messages = [HumanMessage(content=query)]
     messages = agent.invoke({"messages": messages, "session_id": session_id})
+    response = {"msg": "", "reason": ""}
     for m in messages["messages"]:
         m.pretty_print()
-    return messages["messages"]
+        if isinstance(m, AIMessage):
+            if getattr(m, "tool_calls", None) and not response["reason"]:
+                response["reason"] = m.content
+            response['msg'] = m.content
+    if not response["reason"]:
+        response["reason"] = response["msg"]
+    return response
