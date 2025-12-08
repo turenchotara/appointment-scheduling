@@ -1,5 +1,6 @@
 import importlib
 import logging
+import time
 
 from fastapi import FastAPI
 
@@ -31,7 +32,9 @@ logger.addHandler(handler)
 
 for module in settings.BACKEND_MODULES:
     try:
+        st_time = time.time()
         importlib.import_module(module)
+        logger.info(f"Loaded module >>> {module} time ::: {time.time()-st_time}")
     except Exception as e:
         logger.error(f"Failed to load module {module}: {e}")
 

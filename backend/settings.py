@@ -8,6 +8,7 @@ class Settings(BaseSettings):
     DB_PATH: str = ""
     COLLECTION_NAME: str = ""
     SCHEDULE_FILE_PATH: str = ""
+    API_KEY: str = ""
     BACKEND_MODULES: List[str] = ["backend.models", "backend.rag", "backend.api", "backend.agent"]
 
     model_config = SettingsConfigDict(

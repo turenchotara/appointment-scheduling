@@ -47,8 +47,11 @@ class FAQ:
         """Performs a RAG lookup on the FAQ knowledge base."""
         logger.info(f"Query: {query} Search relevant documents...")
 
-        results = self.vector_client.fetch_chunk(query)
-
+        try:
+            results = self.vector_client.fetch_chunk(query)
+        except Exception as e:
+            logger.exception("Error while fetch documents.")
+            results={}
         if not results or not results.get('documents') or not results['documents'][0]:
             return "I'm sorry, I couldn't find an answer to that specific question in my knowledge base. Can I help you schedule an appointment instead?"
 
