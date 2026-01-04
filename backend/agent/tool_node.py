@@ -9,6 +9,8 @@ from backend import logger
 
 async def tool_node(state: Dict) -> Dict[str, List[ToolMessage]]:
     """Execute pending tool calls emitted by the LLM."""
+    ""
+    logger.info("Starting tool node")
     if not state["messages"]:
         return {}
 
@@ -22,14 +24,22 @@ async def tool_node(state: Dict) -> Dict[str, List[ToolMessage]]:
 
     observations = []
     for tool_call in tool_calls:
-        logger.info(f"Calling {tool_call}")
+        logger.info(f"Calling.... {tool_call['name']}")
+        logger.debug(f"Tool call info :::\t{tool_call}")
         tool = tools_by_name[tool_call["name"]]
-        
-        result = await tool.ainvoke(tool_call["args"])
-        
-        observations.append(
-            ToolMessage(content=result, tool_call_id=tool_call["id"])
-        )
+
+        try:
+            result = await tool.ainvoke(tool_call["args"])
+            observations.append(
+                ToolMessage(content=result, tool_call_id=tool_call["id"])
+            )
+        except Exception as e:
+            logger.error(e)
+            observations.append(
+                ToolMessage(content=e.__str__(), tool_call_id=tool_call["id"])
+            )
+        for i in observations:
+            i.pretty_print()
 
     return {"messages": observations}
 

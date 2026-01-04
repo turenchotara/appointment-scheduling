@@ -39,6 +39,67 @@ function App() {
     setMessages([])
   }
 
+  const handleDownloadHistory = () => {
+    if (messages.length === 0) {
+      alert('No chat history to download.')
+      return
+    }
+
+    // Create a formatted chat history
+    const chatHistory = {
+      sessionId,
+      exportedAt: new Date().toISOString(),
+      messageCount: messages.length,
+      messages: messages.map((msg, index) => ({
+        index: index + 1,
+        role: msg.role,
+        content: msg.content,
+        timestamp: new Date().toISOString(), // Approximate timestamp
+      })),
+    }
+
+    // Create text format
+    const textFormat = `Chat History Export
+Session ID: ${sessionId}
+Exported: ${new Date().toLocaleString()}
+Total Messages: ${messages.length}
+
+${'='.repeat(60)}
+
+${messages
+  .map(
+    (msg, index) =>
+      `[${index + 1}] ${msg.role.toUpperCase()}\n${msg.content}\n${'-'.repeat(60)}`
+  )
+  .join('\n\n')}
+`
+
+    // Create JSON format
+    const jsonFormat = JSON.stringify(chatHistory, null, 2)
+
+    // Create and download JSON file
+    const jsonBlob = new Blob([jsonFormat], { type: 'application/json' })
+    const jsonUrl = URL.createObjectURL(jsonBlob)
+    const jsonLink = document.createElement('a')
+    jsonLink.href = jsonUrl
+    jsonLink.download = `chat-history-${sessionId}-${Date.now()}.json`
+    document.body.appendChild(jsonLink)
+    jsonLink.click()
+    document.body.removeChild(jsonLink)
+    URL.revokeObjectURL(jsonUrl)
+
+    // Create and download text file
+    const textBlob = new Blob([textFormat], { type: 'text/plain' })
+    const textUrl = URL.createObjectURL(textBlob)
+    const textLink = document.createElement('a')
+    textLink.href = textUrl
+    textLink.download = `chat-history-${sessionId}-${Date.now()}.txt`
+    document.body.appendChild(textLink)
+    textLink.click()
+    document.body.removeChild(textLink)
+    URL.revokeObjectURL(textUrl)
+  }
+
   const handleSend = async () => {
     if (!input.trim() || isLoading) return
 
@@ -117,9 +178,19 @@ function App() {
       <div className="chat-container">
         <div className="chat-header">
           <h1>Chat Assistant</h1>
-          <button onClick={handleReloadSession} className="reload-button">
-            Reload Session
-          </button>
+          <div className="header-buttons">
+            <button
+              onClick={handleDownloadHistory}
+              className="download-button"
+              disabled={messages.length === 0}
+              title="Download chat history"
+            >
+              Download History
+            </button>
+            <button onClick={handleReloadSession} className="reload-button">
+              Reload Session
+            </button>
+          </div>
         </div>
 
         <div className="messages-container">
