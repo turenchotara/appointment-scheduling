@@ -15,7 +15,7 @@ class Availability(BaseModel):
 @tool(args_schema=Availability)
 async def check_availability(session_type: str, session_date: str):
     """
-    Check availability and with session types of appointments.
+    This tool use for a check availability of the slot and with session types of appointments.
     :return: provide session types with available time slots for the session.
     """
 
@@ -90,9 +90,13 @@ async def check_availability(session_type: str, session_date: str):
         return "Sorry, an unexpected error occurred while checking availability. Please try again later."
 
 @tool
-def appointment_slot_types():
+def appointment_session_types() -> str:
     """
-    Use this tool when you want to get types of appointments. and they duration.
+    Use this tool to retrieve all available appointment session types and their durations in minutes.
+    Call this when you need to know what types of appointments can be booked or to calculate time slots.
+
+    Returns:
+        str: types of available appointments sessions.
     """
 
     durations = {

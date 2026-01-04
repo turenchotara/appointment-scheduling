@@ -1,8 +1,8 @@
-from .booking_tool import book_appointment
-from .availability_tool import check_availability, appointment_slot_types
+from .booking_tool import book_appointment, current_datetime_iso
+from .availability_tool import check_availability, appointment_session_types
 from .retrieve import get_relevant_faq
 
-tools = [book_appointment, check_availability, get_relevant_faq, appointment_slot_types]
+tools = [book_appointment, check_availability, get_relevant_faq, appointment_session_types, current_datetime_iso]
 tools_by_name = {tool.name: tool for tool in tools}
 
 
