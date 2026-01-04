@@ -162,7 +162,7 @@ async def book_appointment(session_type: str, session_date: str, booking_time: s
 
 
 @tool()
-async def current_datetime_iso() -> str:
+async def current_date_and_time() -> str:
     """
     Returns the current date and time in ISO 8601 format.
 
