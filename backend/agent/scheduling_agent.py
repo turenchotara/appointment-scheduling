@@ -9,15 +9,23 @@ from backend.tools import tools
 from .prompt import AGENT_PROMPT
 from .state import MessagesState
 from .tool_node import tool_node
+from backend import logger
 
-llm = ChatGoogleGenerativeAI(
+gemini_llm = ChatGoogleGenerativeAI(
     model="gemini-2.5-flash",
     temperature=0.1,
     max_retries=2,
     google_api_key=""
 )
 
-model_with_tools = llm.bind_tools(tools)
+azure_openai_llm = AzureChatOpenAI(
+    azure_endpoint="",
+    azure_deployment="gpt-4.1",
+    api_key="",
+    api_version=""
+)
+
+model_with_tools = azure_openai_llm.bind_tools(tools)
 
 
 def llm_call(state: dict):
@@ -75,13 +83,15 @@ async def invoke_agent(query, session_id):
     messages = await agent.ainvoke({"messages": messages, "session_id": session_id},
                             config={"configurable": {"thread_id": session_id}}
                             )
+    logger.info("Agent invocation complete.")
     response = {"msg": "", "reason": ""}
-    for m in messages["messages"]:
-        m.pretty_print()
-        if isinstance(m, AIMessage):
-            if getattr(m, "tool_calls", None) and not response["reason"]:
-                response["reason"] = m.content
-            response['msg'] = m.content
+    last_msg = messages["messages"][-1]
+    last_msg.pretty_print()
+    if isinstance(last_msg, AIMessage):
+        if getattr(last_msg, "tool_calls", None) and not response["reason"]:
+            response["reason"] = last_msg.content
+        response['msg'] = last_msg.text
+
     if not response["reason"]:
         response["reason"] = response["msg"]
     return response
