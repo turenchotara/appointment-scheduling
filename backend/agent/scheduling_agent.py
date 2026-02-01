@@ -1,43 +1,32 @@
-from langchain_core.messages import SystemMessage, HumanMessage, AIMessage
-from langchain_google_genai import ChatGoogleGenerativeAI
-from langchain_openai import AzureChatOpenAI
+from typing import Literal
+
+from langchain_core.messages import AIMessage, HumanMessage, SystemMessage
 from langgraph.checkpoint.memory import InMemorySaver
-from langgraph.constants import START, END
+from langgraph.constants import END, START
 from langgraph.graph import StateGraph
 
-from backend.tools import tools
-from .prompt import AGENT_PROMPT
-from .state import MessagesState
-from .tool_node import tool_node
 from backend import logger
+from backend.tools import tools
+from .llm_config import get_llm_with_tools
+from .prompt import AGENT_PROMPT
+from .state import AgentResponse, MessagesState
+from .tool_node import tool_node
 
-gemini_llm = ChatGoogleGenerativeAI(
-    model="gemini-2.5-flash",
-    temperature=0.1,
-    max_retries=2,
-    google_api_key=""
-)
-
-azure_openai_llm = AzureChatOpenAI(
-    azure_endpoint="",
-    azure_deployment="gpt-4.1",
-    api_key="",
-    api_version=""
-)
-
-model_with_tools = azure_openai_llm.bind_tools(tools)
+# Get the LLM with tools bound
+model_with_tools = get_llm_with_tools(tools, provider="azure")
 
 
-def llm_call(state: dict):
-    """LLM decides whether to call a tool or not"""
-
+def llm_call(state: MessagesState) -> MessagesState:
+    """LLM decides whether to call a tool or not.
+    
+    Args:
+        state: The current agent state containing messages.
+        
+    Returns:
+        Updated state with the LLM response.
+    """
     llm_response = model_with_tools.invoke(
-        [
-            SystemMessage(
-                content=AGENT_PROMPT
-            )
-        ]
-        + state["messages"]
+        [SystemMessage(content=AGENT_PROMPT)] + state["messages"]
     )
 
     return {
@@ -46,8 +35,15 @@ def llm_call(state: dict):
     }
 
 
-def should_continue(state: dict) -> str:
-    """Decide whether we need to execute a tool call."""
+def should_continue(state: MessagesState) -> Literal["tool_node", "end"]:
+    """Decide whether we need to execute a tool call.
+    
+    Args:
+        state: The current agent state containing messages.
+        
+    Returns:
+        "tool_node" if there are tool calls to execute, "end" otherwise.
+    """
     last_message = state["messages"][-1]
     if getattr(last_message, "tool_calls", None):
         return "tool_node"
@@ -55,7 +51,7 @@ def should_continue(state: dict) -> str:
 
 
 # Build workflow
-agent_builder = StateGraph(MessagesState)
+agent_builder: StateGraph = StateGraph(MessagesState)
 
 # Add nodes
 agent_builder.add_node("llm_call", llm_call)
@@ -73,25 +69,39 @@ agent_builder.add_conditional_edges(
 )
 agent_builder.add_edge("tool_node", "llm_call")
 
-checkpointer = InMemorySaver()
+checkpointer: InMemorySaver = InMemorySaver()
 # Compile the agent
 agent = agent_builder.compile(checkpointer=checkpointer)
 
 
-async def invoke_agent(query, session_id):
+async def invoke_agent(query: str, session_id: str) -> AgentResponse:
+    """Invoke the scheduling agent with a user query.
+    
+    Args:
+        query: The user's input message.
+        session_id: Unique identifier for the conversation session.
+        
+    Returns:
+        AgentResponse containing the message and reason.
+    """
     messages = [HumanMessage(content=query)]
-    messages = await agent.ainvoke({"messages": messages, "session_id": session_id},
-                            config={"configurable": {"thread_id": session_id}}
-                            )
+    result = await agent.ainvoke(
+        {"messages": messages, "session_id": session_id},
+        config={"configurable": {"thread_id": session_id}}
+    )
+    
     logger.info("Agent invocation complete.")
-    response = {"msg": "", "reason": ""}
-    last_msg = messages["messages"][-1]
+    response: AgentResponse = {"msg": "", "reason": ""}
+    
+    last_msg = result["messages"][-1]
     last_msg.pretty_print()
+    
     if isinstance(last_msg, AIMessage):
         if getattr(last_msg, "tool_calls", None) and not response["reason"]:
-            response["reason"] = last_msg.content
-        response['msg'] = last_msg.text
+            response["reason"] = str(last_msg.content)
+        response["msg"] = last_msg.text if hasattr(last_msg, "text") else str(last_msg.content)
 
     if not response["reason"]:
         response["reason"] = response["msg"]
+    
     return response
