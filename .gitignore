@@ -143,6 +143,7 @@ venv/
 ENV/
 env.bak/
 venv.bak/
+*venv/
 
 # Spyder project settings
 .spyderproject
@@ -208,3 +209,4 @@ __marimo__/
 
 
 */data/vector/
+*/data/chroma_db/
