@@ -1,6 +1,7 @@
 from typing import Any
 
 import chromadb
+import torch
 from chromadb.api.models.Collection import Collection
 from chromadb.utils import embedding_functions
 from chromadb.utils.embedding_functions import SentenceTransformerEmbeddingFunction
@@ -39,8 +40,9 @@ class VectorStore:
         Returns:
             SentenceTransformerEmbeddingFunction configured with all-MiniLM-L6-v2.
         """
+        device = "cuda" if torch.cuda.is_available() else "cpu"
         return embedding_functions.SentenceTransformerEmbeddingFunction(
-            model_name="all-MiniLM-L6-v2"
+            model_name="all-MiniLM-L6-v2", device=device
         )
 
     def initialize_chroma_db(self) -> Collection | None:
