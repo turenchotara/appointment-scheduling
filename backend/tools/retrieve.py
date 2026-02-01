@@ -5,16 +5,21 @@ from backend.rag.faq import FAQ
 
 
 class Retrieve(BaseModel):
+    """Schema for FAQ retrieval parameters."""
+    
     query: str = Field(
         ...,
-        description="The user's question or information request that needs to be answered using the FAQ knowledge base. This should be the exact question or query as asked by the user."
+        description=(
+            "The user's question or information request that needs to be answered "
+            "using the FAQ knowledge base. This should be the exact question or "
+            "query as asked by the user."
+        )
     )
 
 
 @tool(args_schema=Retrieve)
-def get_relevant_faq(query: str):
-    """
-    Retrieves relevant FAQ entries and knowledge base information to answer user questions.
+def get_relevant_faq(query: str) -> str:
+    """Retrieve relevant FAQ entries and knowledge base information.
     
     Use this tool when:
     - You need factual information from the knowledge base to provide accurate answers
@@ -29,5 +34,4 @@ def get_relevant_faq(query: str):
     Returns:
         A string containing the most relevant FAQ entries and knowledge chunks, separated by newlines.
     """
-
     return FAQ().answer_faq_query(query)
