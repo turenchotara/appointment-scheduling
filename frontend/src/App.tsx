@@ -1,244 +1,78 @@
-import { useState, useRef, useEffect } from 'react'
-import ReactMarkdown from 'react-markdown'
+import { useState } from 'react'
+import { ChatPanel } from './ChatPanel'
 import './App.css'
 
-interface Message {
-  role: 'user' | 'assistant'
-  content: string
-}
-
-// API configuration - easy to change in one place
-const API_ENDPOINT = '/chat'
-
-function generateSessionId(): string {
-  return `${Date.now()}-${Math.random().toString(36).substr(2, 9)}`
-}
-
 function App() {
-  const [messages, setMessages] = useState<Message[]>([])
-  const [input, setInput] = useState('')
-  const [sessionId, setSessionId] = useState<string>(() => generateSessionId())
-  const [isLoading, setIsLoading] = useState(false)
-  const messagesEndRef = useRef<HTMLDivElement>(null)
-  const inputRef = useRef<HTMLTextAreaElement>(null)
+  const [chatOpen, setChatOpen] = useState(false)
+  const [chatFullscreen, setChatFullscreen] = useState(false)
+  const [isClosing, setIsClosing] = useState(false)
 
-  // Auto-scroll to bottom when new messages arrive
-  useEffect(() => {
-    messagesEndRef.current?.scrollIntoView({ behavior: 'smooth' })
-  }, [messages])
-
-  // Auto-focus message box when response arrives
-  useEffect(() => {
-    if (!isLoading && inputRef.current) {
-      inputRef.current.focus()
-    }
-  }, [isLoading])
-
-  const handleReloadSession = () => {
-    setSessionId(generateSessionId())
-    setMessages([])
+  const toggleChat = () => setChatOpen((prev) => !prev)
+  const closeChat = () => {
+    if (isClosing) return
+    setIsClosing(true)
   }
-
-  const handleDownloadHistory = () => {
-    if (messages.length === 0) {
-      alert('No chat history to download.')
-      return
-    }
-
-    // Create a formatted chat history
-    const chatHistory = {
-      sessionId,
-      exportedAt: new Date().toISOString(),
-      messageCount: messages.length,
-      messages: messages.map((msg, index) => ({
-        index: index + 1,
-        role: msg.role,
-        content: msg.content,
-        timestamp: new Date().toISOString(), // Approximate timestamp
-      })),
-    }
-
-    // Create text format
-    const textFormat = `Chat History Export
-Session ID: ${sessionId}
-Exported: ${new Date().toLocaleString()}
-Total Messages: ${messages.length}
-
-${'='.repeat(60)}
-
-${messages
-  .map(
-    (msg, index) =>
-      `[${index + 1}] ${msg.role.toUpperCase()}\n${msg.content}\n${'-'.repeat(60)}`
-  )
-  .join('\n\n')}
-`
-
-    // Create JSON format
-    const jsonFormat = JSON.stringify(chatHistory, null, 2)
-
-    // Create and download JSON file
-    const jsonBlob = new Blob([jsonFormat], { type: 'application/json' })
-    const jsonUrl = URL.createObjectURL(jsonBlob)
-    const jsonLink = document.createElement('a')
-    jsonLink.href = jsonUrl
-    jsonLink.download = `chat-history-${sessionId}-${Date.now()}.json`
-    document.body.appendChild(jsonLink)
-    jsonLink.click()
-    document.body.removeChild(jsonLink)
-    URL.revokeObjectURL(jsonUrl)
-
-    // Create and download text file
-    const textBlob = new Blob([textFormat], { type: 'text/plain' })
-    const textUrl = URL.createObjectURL(textBlob)
-    const textLink = document.createElement('a')
-    textLink.href = textUrl
-    textLink.download = `chat-history-${sessionId}-${Date.now()}.txt`
-    document.body.appendChild(textLink)
-    textLink.click()
-    document.body.removeChild(textLink)
-    URL.revokeObjectURL(textUrl)
-  }
-
-  const handleSend = async () => {
-    if (!input.trim() || isLoading) return
-
-    const userMessage = input.trim()
-    setInput('')
-    setMessages((prev) => [...prev, { role: 'user', content: userMessage }])
-    setIsLoading(true)
-
-    try {
-      // Build query parameters
-      const params = new URLSearchParams({
-        user_query: userMessage,
-        session_id: sessionId,
-      })
-      
-      const response = await fetch(`${API_ENDPOINT}?${params.toString()}`, {
-        method: 'GET',
-        headers: {
-          'Content-Type': 'application/json',
-        },
-      })
-
-      if (!response.ok) {
-        throw new Error(`HTTP error! status: ${response.status}`)
-      }
-
-      const data = await response.json()
-      
-      // Backend returns { result: { msg: "...", reason: "..." } } or { result: "..." }
-      let assistantMessage = 'No response received'
-      
-      if (data.result) {
-        // Check if result is an object with msg/reason properties
-        if (typeof data.result === 'object' && data.result !== null) {
-          assistantMessage = data.result.msg || data.result.reason || data.result.message || JSON.stringify(data.result)
-        } else if (typeof data.result === 'string') {
-          assistantMessage = data.result
-        }
-      } else if (data.message) {
-        assistantMessage = typeof data.message === 'string' ? data.message : JSON.stringify(data.message)
-      } else if (data.response) {
-        assistantMessage = typeof data.response === 'string' ? data.response : JSON.stringify(data.response)
-      }
-      
-      // Ensure we always have a string for ReactMarkdown
-      if (typeof assistantMessage !== 'string') {
-        assistantMessage = String(assistantMessage)
-      }
-      
-      // Hide loading indicator and add message
-      setIsLoading(false)
-      setMessages((prev) => [...prev, { role: 'assistant', content: assistantMessage }])
-    } catch (error) {
-      console.error('Error sending message:', error)
-      // Hide loading indicator and add error message
-      setIsLoading(false)
-      setMessages((prev) => [
-        ...prev,
-        {
-          role: 'assistant',
-          content: `Error: ${error instanceof Error ? error.message : 'Failed to send message'}`,
-        },
-      ])
+  const handlePopupAnimationEnd = () => {
+    if (isClosing) {
+      setChatOpen(false)
+      setIsClosing(false)
     }
   }
-
-  const handleKeyPress = (e: React.KeyboardEvent<HTMLTextAreaElement>) => {
-    if (e.key === 'Enter' && !e.shiftKey) {
-      e.preventDefault()
-      handleSend()
-    }
-  }
+  const toggleFullscreen = () => setChatFullscreen((prev) => !prev)
 
   return (
     <div className="app">
-      <div className="chat-container">
-        <div className="chat-header">
-          <h1>Chat Assistant</h1>
-          <div className="header-buttons">
-            <button
-              onClick={handleDownloadHistory}
-              className="download-button"
-              disabled={messages.length === 0}
-              title="Download chat history"
-            >
-              Download History
-            </button>
-            <button onClick={handleReloadSession} className="reload-button">
-              Reload Session
-            </button>
+      <main className="app-main">
+        <div className="app-hero">
+          <h1 className="app-hero-title">Appointment Scheduling</h1>
+          <p className="app-hero-subtitle">
+            Book appointments, check availability, and get help from our assistant.
+          </p>
+          <p className="app-hero-hint">
+            Click the assistant icon on the right to start a conversation.
+          </p>
+        </div>
+      </main>
+
+      {/* Close FAB: bottom-right viewport, circle, blue; white X only when chat open, soft blue glow */}
+      <button
+        type="button"
+        className={`chat-fab ${chatOpen ? 'chat-fab--close' : ''} ${isClosing ? 'chat-fab--hidden' : ''}`}
+        onClick={chatOpen ? closeChat : toggleChat}
+        aria-label={chatOpen ? 'Close chat' : 'Open chat'}
+        title={chatOpen ? 'Close' : 'Open chat'}
+      >
+        {chatOpen ? (
+          <span className="chat-fab-icon" aria-hidden>
+            <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.75" strokeLinecap="round" strokeLinejoin="round">
+              <path d="M18 6L6 18M6 6l12 12" />
+            </svg>
+          </span>
+        ) : (
+          <svg width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" aria-hidden>
+            <path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z" />
+          </svg>
+        )}
+      </button>
+
+      {/* Chat popup - right side */}
+      {chatOpen && (
+        <div className={`chat-popup-wrapper ${isClosing ? 'chat-popup-wrapper--closing' : ''}`}>
+          <div className="chat-popup-backdrop" onClick={closeChat} aria-hidden="true" />
+          <div
+            className={`chat-popup ${isClosing ? 'chat-popup--closing' : ''}`}
+            onAnimationEnd={handlePopupAnimationEnd}
+          >
+            <ChatPanel
+              isFullscreen={chatFullscreen}
+              onToggleFullscreen={toggleFullscreen}
+              onClose={closeChat}
+            />
           </div>
         </div>
-
-        <div className="messages-container">
-          {messages.length === 0 && (
-            <div className="empty-state">
-              <p>Start a conversation by typing a message below.</p>
-            </div>
-          )}
-          {messages.map((message, index) => (
-            <div key={index} className={`message ${message.role}`}>
-              <div className="message-content">
-                <ReactMarkdown>{message.content}</ReactMarkdown>
-              </div>
-            </div>
-          ))}
-          {isLoading && (
-            <div className="message assistant loading-message">
-              <div className="message-content">
-                <div className="loading-indicator">Thinking...</div>
-              </div>
-            </div>
-          )}
-          <div ref={messagesEndRef} />
-        </div>
-
-        <div className="input-container">
-          <textarea
-            ref={inputRef}
-            value={input}
-            onChange={(e) => setInput(e.target.value)}
-            onKeyPress={handleKeyPress}
-            placeholder="Type your message... (Press Enter to send, Shift+Enter for new line)"
-            rows={3}
-            disabled={isLoading}
-            className="message-input"
-          />
-          <button
-            onClick={handleSend}
-            disabled={!input.trim() || isLoading}
-            className="send-button"
-          >
-            Send
-          </button>
-        </div>
-      </div>
+      )}
     </div>
   )
 }
 
 export default App
-
