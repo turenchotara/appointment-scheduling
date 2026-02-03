@@ -13,7 +13,7 @@ from .state import AgentResponse, MessagesState
 from .tool_node import tool_node
 
 # Get the LLM with tools bound
-model_with_tools = get_llm_with_tools(tools, provider="azure")
+model_with_tools = get_llm_with_tools(tools, provider="gemini")
 
 
 def llm_call(state: MessagesState) -> MessagesState:
