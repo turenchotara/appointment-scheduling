@@ -1,0 +1,16 @@
+{
+	"timezone": "America/New_York",
+	"working_hours": {
+		"mon_fri": { "start": "09:00", "end": "17:00" }
+	},
+	"appointments": [
+		{ "date": "2025-10-31", "start_time": "10:00", "end_time": "10:30" },
+		{ "date": "2025-10-31", "start_time": "14:00", "end_time": "14:30" }
+	],
+	"durations": {
+		"consultation": 30,
+		"followup": 15,
+		"physical": 45,
+		"specialist": 60
+	}
+}
